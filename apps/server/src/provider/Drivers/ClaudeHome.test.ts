@@ -47,6 +47,31 @@ it.layer(NodeServices.layer)("ClaudeHome", (it) => {
       }),
     );
 
+    it.effect("overrides CLAUDE_CODE_ENTRYPOINT only when an entrypoint is chosen", () =>
+      Effect.gen(function* () {
+        const inherited = { CLAUDE_CODE_ENTRYPOINT: "sdk-cli", OTHER: "kept" };
+
+        const overridden = yield* makeClaudeEnvironment(
+          { homePath: "", entrypoint: "cli" },
+          inherited,
+        );
+        expect(overridden).toEqual({ CLAUDE_CODE_ENTRYPOINT: "cli", OTHER: "kept" });
+
+        const withHome = yield* makeClaudeEnvironment(
+          { homePath: "~/.claude-work", entrypoint: "cli" },
+          inherited,
+        );
+        expect(withHome.CLAUDE_CODE_ENTRYPOINT).toBe("cli");
+        expect(withHome.CLAUDE_CONFIG_DIR).toBeDefined();
+
+        const untouched = yield* makeClaudeEnvironment(
+          { homePath: "", entrypoint: "default" },
+          inherited,
+        );
+        expect(untouched).toBe(inherited);
+      }),
+    );
+
     it.effect("separates capability probes by cwd", () =>
       Effect.gen(function* () {
         const config = { binaryPath: "claude", homePath: "" };

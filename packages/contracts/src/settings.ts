@@ -656,6 +656,12 @@ const InstanceIdleCompaction = Schema.Literals(
   INSTANCE_IDLE_COMPACTION_MODES.map((mode) => mode.value),
 );
 
+const CLAUDE_ENTRYPOINTS = [
+  { value: "default", label: "Default (sdk-ts)" },
+  { value: "cli", label: "cli" },
+] as const;
+const ClaudeEntrypoint = Schema.Literals(CLAUDE_ENTRYPOINTS.map((entrypoint) => entrypoint.value));
+
 export const ClaudeSettings = makeProviderSettingsSchema(
   {
     enabled: Schema.Boolean.pipe(
@@ -720,9 +726,29 @@ export const ClaudeSettings = makeProviderSettingsSchema(
         },
       }),
     ),
+    entrypoint: ClaudeEntrypoint.pipe(
+      Schema.withDecodingDefault(Effect.succeed("default" as const)),
+      Schema.annotateKey({
+        title: "Client entrypoint",
+        description:
+          "Overrides CLAUDE_CODE_ENTRYPOINT, the client label Claude Code sends to Anthropic. Agent SDK apps send sdk-ts by default. Unsupported by Anthropic and may stop working.",
+        providerSettingsForm: {
+          control: "select",
+          options: CLAUDE_ENTRYPOINTS,
+          clearWhenEmpty: "omit",
+        },
+      }),
+    ),
   },
   {
-    order: ["binaryPath", "homePath", "autoCompactWindow", "idleCompaction", "launchArgs"],
+    order: [
+      "binaryPath",
+      "homePath",
+      "autoCompactWindow",
+      "idleCompaction",
+      "entrypoint",
+      "launchArgs",
+    ],
   },
 );
 export type ClaudeSettings = typeof ClaudeSettings.Type;

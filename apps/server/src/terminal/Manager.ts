@@ -1444,7 +1444,8 @@ export const resolveProviderInstanceTerminalEnvironment = Effect.fn(
   } else if (instance.driver === "claudeAgent") {
     const config = decodeClaudeSettings(instance.config ?? {});
     if (Option.isSome(config)) {
-      resolved = yield* makeClaudeEnvironment(config.value, resolved).pipe(
+      // The terminal runs the real TUI, which labels itself.
+      resolved = yield* makeClaudeEnvironment({ homePath: config.value.homePath }, resolved).pipe(
         Effect.provideService(Path.Path, input.path),
       );
     }

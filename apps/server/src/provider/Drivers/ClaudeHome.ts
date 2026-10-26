@@ -28,10 +28,15 @@ export const resolveClaudeHomePath = Effect.fn("resolveClaudeHomePath")(function
 });
 
 export const makeClaudeEnvironment = Effect.fn("makeClaudeEnvironment")(function* (
-  config: Pick<ClaudeSettings, "homePath">,
+  config: Pick<ClaudeSettings, "homePath"> & Partial<Pick<ClaudeSettings, "entrypoint">>,
   baseEnv?: NodeJS.ProcessEnv,
 ): Effect.fn.Return<NodeJS.ProcessEnv, never, Path.Path> {
-  const resolvedBaseEnv = baseEnv ?? process.env;
+  const hostEnv = baseEnv ?? process.env;
+  // The Agent SDK only fills this in when it is unset, so the value reaches Claude Code intact.
+  const resolvedBaseEnv =
+    config.entrypoint === undefined || config.entrypoint === "default"
+      ? hostEnv
+      : { ...hostEnv, CLAUDE_CODE_ENTRYPOINT: config.entrypoint };
   const homePath = config.homePath.trim();
   if (homePath.length === 0) return resolvedBaseEnv;
   const resolvedHomePath = yield* resolveClaudeHomePath(config);
