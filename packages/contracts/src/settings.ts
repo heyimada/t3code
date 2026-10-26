@@ -659,6 +659,7 @@ const InstanceIdleCompaction = Schema.Literals(
 const CLAUDE_ENTRYPOINTS = [
   { value: "default", label: "Default (sdk-ts)" },
   { value: "cli", label: "cli" },
+  { value: "claude-vscode", label: "claude-vscode" },
 ] as const;
 const ClaudeEntrypoint = Schema.Literals(CLAUDE_ENTRYPOINTS.map((entrypoint) => entrypoint.value));
 

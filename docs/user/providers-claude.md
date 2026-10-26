@@ -45,8 +45,8 @@ T3 Code uses the Claude configuration on the connected server.
 
 Claude Code sends a client label (`CLAUDE_CODE_ENTRYPOINT`) with every request. Apps built on the
 Agent SDK, including T3 Code, send `sdk-ts`, and some accounts see their 5-hour window drain
-faster for that label than for the interactive CLI. Set **Client entrypoint** to `cli` in the
-Claude provider settings to send the CLI's label instead. Anthropic has not documented this, so it
+faster for that label than for the interactive CLI. Set **Client entrypoint** to `cli` or `claude-vscode` in the
+Claude provider settings to send that label instead. Anthropic has not documented this, so it
 is unsupported and may stop working. It does not affect terminals you open in T3 Code.
 
 ## Compact long conversations
