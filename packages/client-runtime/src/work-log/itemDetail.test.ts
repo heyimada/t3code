@@ -4,7 +4,7 @@ import * as DateTime from "effect/DateTime";
 
 import { turnItemOutputImages, turnItemOutputText } from "./itemDetail.ts";
 
-function toolItem(output: unknown): OrchestrationV2TurnItem {
+function toolItem(output: unknown, toolName = "screenshots"): OrchestrationV2TurnItem {
   return {
     id: TurnItemId.make("images"),
     threadId: ThreadId.make("thread"),
@@ -21,11 +21,27 @@ function toolItem(output: unknown): OrchestrationV2TurnItem {
     completedAt: null,
     updatedAt: DateTime.makeUnsafe("2026-10-01T00:00:00Z"),
     type: "dynamic_tool",
-    toolName: "screenshots",
+    toolName,
     input: {},
     output,
   };
 }
+
+describe("advisor output text", () => {
+  it.each([
+    [{ type: "advisor_result", text: "Test the error path first." }, "Test the error path first."],
+    [
+      { type: "advisor_redacted_result", encrypted_content: "EtYZCioIFRgC" },
+      "Anthropic encrypts this advice. Only the model can read it.",
+    ],
+    [
+      { type: "advisor_tool_result_error", error_code: "max_uses_exceeded" },
+      "Advisor error: max uses exceeded",
+    ],
+  ])("formats %o", (output, expected) => {
+    expect(turnItemOutputText(toolItem(output, "advisor"))).toBe(expected);
+  });
+});
 
 describe("tool image output parsing", () => {
   it.each(["array", "content"] as const)(

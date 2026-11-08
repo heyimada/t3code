@@ -18,6 +18,7 @@ import {
   SquarePenIcon,
   TerminalIcon,
   HammerIcon,
+  LightbulbIcon,
   WrenchIcon,
   Code2Icon,
   XIcon,
@@ -46,6 +47,7 @@ export type WorkEntryIconName =
   | "eye"
   | "globe"
   | "hammer"
+  | "lightbulb"
   | "message-circle"
   | "search"
   | "square-pen"
@@ -258,6 +260,8 @@ function WorkEntryIcon({ name, className }: { name: WorkEntryIconName; className
       return <GlobeIcon className={className} aria-hidden />;
     case "hammer":
       return <HammerIcon className={className} aria-hidden />;
+    case "lightbulb":
+      return <LightbulbIcon className={className} aria-hidden />;
     case "search":
       return <SearchIcon className={className} aria-hidden />;
     case "message-circle":

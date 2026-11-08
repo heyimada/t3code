@@ -57,7 +57,9 @@ import { idleCompactionOf, isCompactionCommandMessage, RunId, ThreadId } from "@
 import {
   classifyToolActivity,
   collectToolFilePaths,
+  claudeAdvisorLabel,
   dynamicToolTitle,
+  isClaudeAdvisorTool,
   isJavaScriptReplTool,
   formatReadToolLabel,
   formatSearchToolLabel,
@@ -113,6 +115,7 @@ export interface ThreadFeedActivity {
     | "search"
     | "stop"
     | "hammer"
+    | "lightbulb"
     | "lock"
     | "message"
     | "warning"
@@ -607,7 +610,11 @@ function itemIcon(item: OrchestrationV2TurnItem): ThreadFeedActivity["icon"] {
     case "assistant_message":
       return "message";
     case "dynamic_tool":
-      return isJavaScriptReplTool(item.toolName) ? "code" : "wrench";
+      return isJavaScriptReplTool(item.toolName)
+        ? "code"
+        : isClaudeAdvisorTool(item.toolName)
+          ? "lightbulb"
+          : "wrench";
     case "subagent":
       return "hammer";
     case "run_interrupt_request":
@@ -654,6 +661,9 @@ function itemSummary(
   if (item.type === "notification") return item.summary;
   if (item.type === "system_notice") return item.message;
   if (item.type === "compaction") return contextCompactionLabel(item);
+  if (item.type === "dynamic_tool" && isClaudeAdvisorTool(item.toolName)) {
+    return claudeAdvisorLabel(item.status);
+  }
   const title =
     (item.type === "dynamic_tool"
       ? dynamicToolTitle(item.toolName, item.input, item.title)

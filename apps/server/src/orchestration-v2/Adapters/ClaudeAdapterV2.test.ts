@@ -8663,6 +8663,69 @@ describe("ClaudeAdapterV2 background wake turns", () => {
     ),
   );
 
+  it.effect("fails an advisor call whose server tool result is an error", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const harness = yield* makeWakeHarness;
+        const now = yield* DateTime.now;
+        const advisorToolUseId = "srvtoolu_01AdvisorError";
+
+        yield* harness.runtime.startTurn(
+          makeClaudeTestTurnInput({
+            threadId: harness.threadId,
+            providerThread: harness.providerThread,
+            now,
+            attemptId: RunAttemptId.make("attempt-claude-advisor-error"),
+            text: "Check with the advisor.",
+            attachments: [],
+          }),
+        );
+        yield* Queue.offer(
+          harness.sdkMessages,
+          claudeSdkFrame({
+            type: "assistant",
+            message: {
+              model: "claude-sonnet-4-6",
+              id: "msg_advisor_error",
+              type: "message",
+              role: "assistant",
+              content: [
+                { type: "server_tool_use", id: advisorToolUseId, name: "advisor", input: {} },
+                {
+                  type: "advisor_tool_result",
+                  tool_use_id: advisorToolUseId,
+                  content: { type: "advisor_tool_result_error", error_code: "overloaded" },
+                },
+              ],
+            },
+            parent_tool_use_id: null,
+            uuid: "00000000-0000-4000-8000-000000000793",
+            session_id: WAKE_NATIVE_SESSION,
+          }),
+        );
+        yield* Queue.offer(
+          harness.sdkMessages,
+          makeResultFrame({ uuid: "00000000-0000-4000-8000-000000000794", result: "Done." }),
+        );
+        yield* harness.awaitTerminal(1);
+
+        const advisor = harness.events.findLast(
+          (event) =>
+            event.type === "turn_item.updated" &&
+            event.turnItem.nativeItemRef?.nativeId === advisorToolUseId,
+        );
+        assert.equal(
+          advisor?.type === "turn_item.updated" ? advisor.turnItem.status : undefined,
+          "failed",
+        );
+      }).pipe(
+        Effect.provide(
+          Layer.mergeAll(IdAllocator.layer, McpProviderSessions.layer, NodeServices.layer),
+        ),
+      ),
+    ),
+  );
+
   it.effect("answers an approval a held wake turn raises without waiting for the echo", () =>
     Effect.scoped(
       Effect.gen(function* () {

@@ -1,4 +1,4 @@
-import type { ToolLifecycleItemType } from "@t3tools/contracts";
+import type { OrchestrationV2TurnItemStatus, ToolLifecycleItemType } from "@t3tools/contracts";
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -22,6 +22,25 @@ export function claudeSkillInvocation(
   const record = asRecord(input);
   const name = asTrimmedString(record?.skill);
   return name === undefined ? undefined : { name, args: asTrimmedString(record?.args) };
+}
+
+/** Claude's server-side advisor: a stronger model reviewing the transcript, input is always empty. */
+export function isClaudeAdvisorTool(toolName: string | null | undefined): boolean {
+  return toolName === "advisor";
+}
+
+export function claudeAdvisorLabel(status: OrchestrationV2TurnItemStatus): string {
+  switch (status) {
+    case "completed":
+      return "Consulted advisor";
+    case "failed":
+      return "Advisor failed";
+    case "cancelled":
+    case "interrupted":
+      return "Stopped consulting advisor";
+    default:
+      return "Consulting advisor";
+  }
 }
 
 export function isJavaScriptReplTool(toolName: string | null | undefined): boolean {

@@ -1,4 +1,5 @@
 import type { AssetResource, OrchestrationV2TurnItem } from "@t3tools/contracts";
+import { isClaudeAdvisorTool } from "@t3tools/shared/toolActivity";
 import { toolOutputImageBlocks, toolOutputImages } from "@t3tools/shared/toolOutput";
 import * as DateTime from "effect/DateTime";
 
@@ -157,14 +158,32 @@ function commandOutputText(output: string): string {
     .join("\n");
 }
 
+function advisorOutputText(output: unknown): string | null {
+  if (!isRecord(output)) return null;
+  switch (output.type) {
+    case "advisor_result":
+      return typeof output.text === "string" ? output.text : null;
+    case "advisor_redacted_result":
+      return "Anthropic encrypts this advice. Only the model can read it.";
+    case "advisor_tool_result_error":
+      return typeof output.error_code === "string"
+        ? `Advisor error: ${output.error_code.replaceAll("_", " ")}`
+        : null;
+    default:
+      return null;
+  }
+}
+
 export function turnItemOutputText(item: OrchestrationV2TurnItem): string | null {
   switch (item.type) {
     case "command_execution":
       return item.output?.trim() ? commandOutputText(item.output) || null : null;
     case "dynamic_tool":
-      return item.outputOmitted === true
-        ? null
-        : formatToolValue(item.output, item.viewedImagePath !== undefined);
+      if (item.outputOmitted === true) return null;
+      return (
+        (isClaudeAdvisorTool(item.toolName) ? advisorOutputText(item.output) : null) ??
+        formatToolValue(item.output, item.viewedImagePath !== undefined)
+      );
     case "file_search":
       return item.results?.length
         ? item.results
